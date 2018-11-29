@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Default" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Guid>0</Guid>
+    <Name>AbilityCategories</Name>
+    <Description>"As the X2WOTC modding scene as advanced, more and more mods of ever-growing complexity have attempted to steal valuable space on the poor little ability bar. Even though mods such as X and Y have come out in short-sighted attempt to solve this problem, in the end, they have only encouraged it. No more. AbilityCategories will solve this once and for all.</Description>
+    <SteamPublishID>0</SteamPublishID>
+    <AssemblyName>AbilityCategories</AssemblyName>
+    <RootNamespace>AbilityCategories</RootNamespace>
+    <ProjectGuid>{0}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Config\" />
+    <Folder Include="Content\" />
+    <Folder Include="Localization\" />
+    <Folder Include="Localization\INT\" />
+    <Folder Include="Src\" />
+    <Folder Include="Src\AbilityCategories\" />
+    <Folder Include="Src\AbilityCategories\Classes\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ReadMe.txt" />
+    <Content Include="ModPreview.jpg" />
+    <Content Include="Config\XComEditor.ini" />
+    <Content Include="Config\XComEngine.ini" />
+    <Content Include="Config\XComGame.ini" />
+    <Content Include="Localization\INT\XComGame.int" />
+    <Content Include="Localization\INT\AbilityCategories.int" />
+    <Content Include="Src\AbilityCategories\Classes\extra_globals.uci" />
+    <Content Include="Src\AbilityCategories\Classes\X2DownloadableContentInfo_AbilityCategories.uc" />
+  </ItemGroup>
+  <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
+</Project>

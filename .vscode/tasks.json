@@ -1,0 +1,33 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "powershell.exe -file '${workspaceRoot}/scripts/build.ps1' -mod 'AbilityCategories' -srcDirectory '${workspaceRoot}/src' -sdkPath 'C:/XCOM 2 War of the Chosen SDK' -gamePath 'C:/XCOM 2'",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "debug",
+            "type": "shell",
+            "command": "powershell.exe -file '${workspaceRoot}/scripts/run.ps1' -gamePath 'C:/XCOM 2'",
+            "problemMatcher": []
+        },
+        {
+            "label": "publish",
+            "type": "shell",
+            "command": "powershell.exe -file '${workspaceRoot}/scripts/publish.ps1' -amlPath ''",
+            "problemMatcher": []
+        },
+        {
+            "label": "runUnrealEditor",
+            "type": "shell",
+            "command": "powershell.exe -file '${workspaceRoot}/scripts/runUnrealEditor.ps1' -sdkPath 'C:/XCOM 2 War of the Chosen SDK'",
+            "problemMatcher": []
+        }
+    ]
+}
