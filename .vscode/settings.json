@@ -1,3 +1,9 @@
 {
-    "workbench.colorTheme": "Piggy Light (rainglow)"
+    "workbench.colorTheme": "Piggy Light (rainglow)",
+    "files.exclude": {
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true
+    }
 }

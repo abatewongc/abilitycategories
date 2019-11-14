@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //  *********   FIRAXIS SOURCE CODE   ******************
-//  FILE:    UITacticalHUD_AbilityContainer.uc
+//  FILE:	UITacticalHUD_AbilityContainer.uc
 //  AUTHOR:  Brit Steiner, Sam Batista
 //  PURPOSE: Containers holding current soldiers ability icons.
 //----------------------------------------------------------------------------
@@ -20,7 +20,7 @@ var bool IsAvailable;
 var bool bIsShiney; 
 var int Index; 
 
-var X2AbilityTemplate AbilityTemplate;    //Holds TEMPLATE data for the ability referenced by AvailableActionInfo. Ie. what icon does this ability use?
+var X2AbilityTemplate AbilityTemplate;	//Holds TEMPLATE data for the ability referenced by AvailableActionInfo. Ie. what icon does this ability use?
 
 var UIIcon Icon;
 
@@ -122,12 +122,7 @@ simulated function UpdateData(int NewIndex, const out AvailableAction AvailableA
 	//Key the color of the ability icon on the source of the ability
 	if (AbilityTemplate != None)
 	{
-		BattleDataState = XComGameState_BattleData(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_BattleData'));
-		if(BattleDataState.IsAbilityObjectiveHighlighted(AbilityTemplate))
-		{
-			Icon.EnableMouseAutomaticColor(class'UIUtilities_Colors'.const.OBJECTIVEICON_HTML_COLOR, class'UIUtilities_Colors'.const.BLACK_HTML_COLOR);
-		}
-		else if(AbilityTemplate.AbilityIconColor != "")
+		if(AbilityTemplate.AbilityIconColor != "")
 		{
 			Icon.EnableMouseAutomaticColor(AbilityTemplate.AbilityIconColor, class'UIUtilities_Colors'.const.BLACK_HTML_COLOR);
 		}

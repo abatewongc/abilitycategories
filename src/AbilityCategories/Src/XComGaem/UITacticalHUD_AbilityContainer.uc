@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //  *********   FIRAXIS SOURCE CODE   ******************
-//  FILE:    UITacticalHUD_AbilityContainer.uc
+//  FILE:	UITacticalHUD_AbilityContainer.uc
 //  AUTHOR:  Brit Steiner, Tronster
 //  PURPOSE: Containers holding current soldiers ability icons.
 //----------------------------------------------------------------------------
@@ -19,8 +19,8 @@ const MAX_NUM_ABILITIES_PER_ROW_BAR = 15;
 
 var bool bShownAbilityError;
 
-var int                      m_iCurrentIndex;    // Index of selected item.
-var int						 m_iPreviousIndexForSecondaryMovement;
+var int						m_iCurrentIndex;	// Index of selected item.
+var int						m_iPreviousIndexForSecondaryMovement;
 
 
 var bool LastSelectionPermitsImmediateSelect;
@@ -28,14 +28,18 @@ var Actor LastTargetActor;
 var int ActiveAbilities;
 var int TargetIndex;
 var int ForceSelectNextTargetID;
+
 var array<AvailableAction> m_arrAbilities;
 var array<UITacticalHUD_Ability> m_arrUIAbilities;
+var array<UITacticalHUD_AbilityCategory> m_arrUIAbilityCategories;
 
-var int              m_iMouseTargetedAbilityIndex;  //Captures the targeted ability clicked by the mouse 
-var int                      m_kWatchVar_Enemy;             // Watching which enemy is targeted 
-var int                      m_iUseOnlyAbility;             // Don't allow the user to use any ability except the designated ability. -dwuenschell
+var name CurrentAbilityCategory;
 
-var int                      m_iSelectionOnButtonDown;      // The current index when an input is pressed
+var int			 		m_iMouseTargetedAbilityIndex;	//Captures the targeted ability clicked by the mouse 
+var int					m_kWatchVar_Enemy;				// Watching which enemy is targeted 
+var int					m_iUseOnlyAbility;				// Don't allow the user to use any ability except the designated ability. -dwuenschell
+
+var int					  m_iSelectionOnButtonDown;		// The current index when an input is pressed
 
 var X2TargetingMethod TargetingMethod;
 var X2TargetingMethod PrevTargetingMethodUsedForSecondaryTargetingMethodSwap;
@@ -86,19 +90,32 @@ var localized string m_strMeleeAttackName;
 simulated function UITacticalHUD_AbilityContainer InitAbilityContainer()
 {
 	local int i;
-	local UITacticalHUD_Ability kItem;
+	local ACUITacticalHUD_AbilityCategory kItem;
 
 	InitPanel();
 
 	// Pre-cache UI data array
 	for(i = 0; i < MAX_NUM_ABILITIES; ++i)
 	{	
-		kItem = Spawn(class'UITacticalHUD_Ability', self);
+		kItem = Spawn(class'ACUITacticalHUD_AbilityCategory', self);
 		kItem.InitAbilityItem(name("AbilityItem_" $ i));
 		m_arrUIAbilities.AddItem(kItem);
 	}
+	CurrentAbilityCategory = `ACD.ROOT;
 	
 	return self;
+}
+
+simulated function HandleCategorySelection() {
+	local ACUITacticalHUD_AbilityCategory AbilityCategory;
+
+	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
+	CurrentAbilityCategory = AbilityCategory.GetCategoryData().CategoryName;
+	if(CurrentAbilityCategory == `ACD.BACK) {
+		CurrentAbilityCategory = AbilityCategory.GetParentCategoryName();
+	}
+	
+	PopulateFlash();
 }
 
 simulated function OnInit()
@@ -590,13 +607,22 @@ simulated public function bool OnAccept( optional string strOption = "" )
 
 simulated public function bool ConfirmAbility( optional AvailableAction AvailableActionInfo )
 {
-	local XComGameStateHistory          History;
-	local array<vector>                 TargetLocations;
-	local AvailableTarget               AdditionalTarget;
-	local XComGameStateContext          AbilityContext;
-	local XComGameState_Ability         AbilityState;
-	local array<TTile>                  PathTiles;
-	local string                        ConfirmSound;
+	local XComGameStateHistory		  History;
+	local array<vector>				 TargetLocations;
+	local AvailableTarget			   AdditionalTarget;
+	local XComGameStateContext		  AbilityContext;
+	local XComGameState_Ability		 AbilityState;
+	local array<TTile>				  PathTiles;
+	local string						ConfirmSound;
+	local ACUITacticalHUD_AbilityCategory AbilityCategory;
+
+	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
+	if(AbilityCategory != none) {
+		if(AbilityCategory.IsCategory()) {
+			HandleCategorySelection();
+			return false;
+		}
+	}
 
 	ResetMouse();
 
@@ -751,62 +777,6 @@ function bool QuickTargetSelectEnabled()
 	return false;
 }
 
-/*
-
-AbilityTemplate = AbilityState.GetMyTemplate();
-if(AbilityTemplate.SecondaryTargetingMethod != none)
-{
-if( UITacticalHUD(Owner).IsMenuRaised() && !UITacticalHUD(Owner).IsHidingForSecondaryMovement())
-{
-UITacticalHUD(Owner).HideAwayTargetAction();
-XComTacticalInput(PC.PlayerInput).GotoState('UsingSecondaryTargetingMethod');
-//we need to store the targeting method.
-
-PrevTargetingMethodUsedForSecondaryTargetingMethodSwap = TargetingMethod;
-TargetingMethod = new AbilityState.GetMyTemplate().SecondaryTargetingMethod;
-TargetingMethod.Init(AvailableActionInfo);
-TargetingMethod.DirectSetTarget(TargetIndex);
-}
-else if( UITacticalHUD(Owner).IsHidingForSecondaryMovement() && AbilityState.CustomCanActivateFlag )
-bSubmitSuccess = class'XComGameStateContext_Ability'.static.ActivateAbility(AvailableActionInfo, TargetIndex, TargetLocations, TargetingMethod, PathTiles);
-}
-else
-{
-if( AbilityState.CustomCanActivateFlag )
-bSubmitSuccess = class'XComGameStateContext_Ability'.static.ActivateAbility(AvailableActionInfo, TargetIndex, TargetLocations, TargetingMethod, PathTiles);
-}
-AbilityContext.SetSendGameState(false);
-
-
-if (bSubmitSuccess && AbilityState.CustomCanActivateFlag)
-{
-ConfirmSound = AbilityState.GetMyTemplate().AbilityConfirmSound;
-if (ConfirmSound != "")
-`SOUNDMGR.PlaySoundEvent(ConfirmSound);
-
-TargetingMethod.Committed();
-TargetingMethod = none;
-PrevTargetingMethodUsedForSecondaryTargetingMethodSwap = none;
-UITacticalHUD(Owner).m_bIsHidingShotHUDForSecondaryMovement = false;
-
-XComPresentationLayer(Owner.Owner).PopTargetingStates();
-
-PC.SetInputState('ActiveUnit_Moving');
-
-`Pres.m_kUIMouseCursor.HideMouseCursor();
-}
-//we're not going to reset this value if this flag is false, it means our
-//current ability should still be selected, but it couldn't activate for some gameplay reason.
-if( AbilityState.CustomCanActivateFlag && bSubmitSuccess)
-m_iCurrentIndex = -1;
-else
-Movie.Pres.PlayUISound(eSUISound_MenuClickNegative);
-
-return bSubmitSuccess;
-}
-
-*/
-
 function int SelectNextImmediateSelectTargetID()
 {
 	local int IndexOffset;
@@ -899,8 +869,8 @@ public function HitFriendliesAccepted()
 	//	kTargetingAction.m_bPleaseHitFriendlies = true;
 
 		// HAX: OnAccept does some state manipulation which requires the state stack to be purged of the popup dialog state.
-		//      This should not cause a problem since the function above (which calls us) does a state check before poping the dialog state.
-		//      We need to perform the same call in both functions since cancelling or accepting needs to remove the state - sbatista 6/18/12
+		//	  This should not cause a problem since the function above (which calls us) does a state check before poping the dialog state.
+		//	  We need to perform the same call in both functions since cancelling or accepting needs to remove the state - sbatista 6/18/12
 		if( XComPresentationLayer(Movie.Pres).IsInState( 'State_FriendlyFirePopup' ) )
 			XComPresentationLayer(Movie.Pres).PopState();
 
@@ -1074,8 +1044,8 @@ simulated function UpdateAbilitiesArray()
 		if( m_iMouseTargetedAbilityIndex == -1 )
 		{
 			// MHU - We reset the ability selection if it's not initialized.
-			//       We also define the initial shot determined in XGAction_Fire.
-			//       Otherwise, retain the last selection.
+			//	   We also define the initial shot determined in XGAction_Fire.
+			//	   Otherwise, retain the last selection.
 			if (m_iCurrentIndex < 0)
 				SetAbilityByIndex( 0 );
 			else
@@ -1310,12 +1280,13 @@ simulated function PopulateFlash()
 			continue;
 		}
 
-		if(!AbilityTemplate.bCommanderAbility)
+		if(!AbilityTemplate.bCommanderAbility && ShouldShowAbility(AbilityTemplate))
 		{
-			m_arrUIAbilities[ActiveAbilities].UpdateData(ActiveAbilities, AvailableActionInfo);
-			ActiveAbilities++;
+				m_arrUIAbilities[ActiveAbilities].UpdateData(ActiveAbilities, AvailableActionInfo);
+				ActiveAbilities++;
 		}
 	}
+	//
 	
 	mc.FunctionNum("SetNumActiveAbilities", ActiveAbilities);
 	
@@ -1351,6 +1322,22 @@ simulated function PopulateFlash()
 	TooltipAbility = UITacticalHUD_AbilityTooltip(Movie.Pres.m_kTooltipMgr.GetChildByName('TooltipAbility'));
 	if(TooltipAbility != none && TooltipAbility.bIsVisible)
 		TooltipAbility.RefreshData();
+}
+
+simulated function bool ShouldShowAbility(X2AbilityTemplate Template) {
+	local name AbilityCategoryName;
+
+	AbilityCategoryName = AbilityCategoryManager.GetCategoryForAbility(Template);
+	if(AbilityCategoryName == `AC.ALWAYS_SHOW) {
+		return true;
+	}
+
+	// This is mostly used for the back button
+	if(AbilityCategoryName == `AC.ALWAYS_SHOW_EXCEPT_ROOT && CurrentAbilityCategory != `ACD.ROOT) {
+		return true;
+	}
+
+	return (AbilityCategoryName == CurrentAbilityCategory.CategoryName);
 }
 
 // Eac hotkey 
@@ -1653,7 +1640,7 @@ simulated function int GetFirstUsableAbilityIdx()
 
 simulated function ShowAOE(int Index)
 {
-	local AvailableAction       AvailableActionInfo;
+	local AvailableAction	   AvailableActionInfo;
 	local XComGameState_Ability AbilityState;
 	local XComGameState_Unit UnitState;
 	local XGUnit UnitVisualizer;
@@ -1717,7 +1704,7 @@ simulated function SelectAbilityByAbilityObject( AvailableAction Ability )
 
 public function OnCycleWeapons()
 {
-	local XGUnit                kUnit;
+	local XGUnit				kUnit;
 	kUnit = XComTacticalController(PC).GetActiveUnit();
 	// MP: we don't allow certain UI interactions such as switching weapons while in the shot hud.
 	// we cant just check UITacticalHUD::IsMenuRaised() because that gets called from the
@@ -1803,14 +1790,14 @@ simulated function array<AvailableTarget> SortTargets(array<AvailableTarget> Ava
 // Setup an ability. Eventually this should be the ONLY way to select an ability. Everything must route through it.
 simulated function bool SetAbilityByIndex( int AbilityIndex, optional bool ActivatedViaHotKey  )
 {	
-	local UITacticalHUD         TacticalHUD;
-	local AvailableAction       AvailableActionInfo;
+	local UITacticalHUD		 TacticalHUD;
+	local AvailableAction	   AvailableActionInfo;
 	local XComGameState_Ability AbilityState;
-	local XComGameState_Unit    UnitState;
-	local XGUnit                UnitVisualizer;
+	local XComGameState_Unit	UnitState;
+	local XGUnit				UnitVisualizer;
 	local GameRulesCache_Unit	UnitInfoCache;
-	local int                   PreviousIndex;
-	local int                   DefaultTargetIndex;
+	local int				   PreviousIndex;
+	local int				   DefaultTargetIndex;
 	local name					PreviousInputState;
 	local int					TestTargetIndex;
 
@@ -1972,7 +1959,7 @@ simulated function bool SetAbilityByIndex( int AbilityIndex, optional bool Activ
 //Used by the mouse hover tooltip to figure out which ability to get info from 
 simulated function XComGameState_Ability GetAbilityAtIndex( int AbilityIndex )
 {
-	local AvailableAction       AvailableActionInfo;
+	local AvailableAction	   AvailableActionInfo;
 	local XComGameState_Ability AbilityState;
 
 	if( AbilityIndex < 0 || AbilityIndex >= m_arrAbilities.Length )
@@ -2071,7 +2058,7 @@ simulated function int GetSelectedIndex()
 
 simulated function bool CheckForNotifier( XGUnit kUnit )
 {
-	local XGWeapon      kActiveWeapon;
+	local XGWeapon	  kActiveWeapon;
 	local XGInventory   kInventory;
 
 	kInventory = kUnit.GetInventory();
@@ -2106,14 +2093,14 @@ simulated function CheckForHelpMessages()
 	//	{
 	//		kTargetedAbility = XGAbility_Targeted(kAbility);
 
-	//		if (kTargetedAbility == none ||             // If the ability is not targeted
-	//			kTargetedAbility.GetPrimaryTarget() == none)     // or if the targeted ability has no target 
+	//		if (kTargetedAbility == none ||			 // If the ability is not targeted
+	//			kTargetedAbility.GetPrimaryTarget() == none)	 // or if the targeted ability has no target 
 	//		{
 	//			if (kTargetedAbility.HasProperty( eProp_TraceWorld ))
 	//			{
 
 	//				// MHU - HelpMessage is continuously updated depending on what the unit is currently
-	//				//       aiming at. At this point, there's no information available.
+	//				//	   aiming at. At this point, there's no information available.
 	//				UpdateHelpMessage( m_sNoTarget );
 	//				UITacticalHUD(Owner).SetReticleAimPercentages( -1, -1 );
 	//				return;
