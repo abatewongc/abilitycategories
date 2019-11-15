@@ -4,30 +4,60 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "powershell.exe -file '${workspaceRoot}/scripts/build.ps1' -mod 'AbilityCategories' -srcDirectory '${workspaceRoot}/src' -sdkPath 'C:/XCOM 2 War of the Chosen SDK' -gamePath 'C:/XCOM 2'",
+            "command": "-file \"${workspaceRoot}/scripts/build.ps1\" -mod \"AbilityCategories\" -srcDirectory \"${workspaceRoot}/src\" -sdkPath \"${config:mod.sdkpath}\" -gamePath \"${config:mod.gamepath}\"",
+            "options": {
+                "shell": {
+                    "executable": "powershell.exe",
+                },
+            },
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": []
+            "problemMatcher": [{
+                "owner": "unrealscript",
+                "fileLocation": ["absolute"],
+                "pattern": {
+                    "regexp": "^(.*):([0-9]*) : (Warning|Error), ([^\n]*)",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            }]
         },
         {
             "label": "debug",
             "type": "shell",
-            "command": "powershell.exe -file '${workspaceRoot}/scripts/run.ps1' -gamePath 'C:/XCOM 2'",
+            "command": "-file \"${workspaceRoot}/scripts/run.ps1\" -gamePath \"C:/XCOM 2\"",
+            "options": {
+               "shell": {
+                    "executable": "powershell.exe",
+                },
+            },
             "problemMatcher": []
         },
         {
             "label": "publish",
             "type": "shell",
-            "command": "powershell.exe -file '${workspaceRoot}/scripts/publish.ps1' -amlPath ''",
+            "command": "-file \"${workspaceRoot}/scripts/publish.ps1\" -amlPath \"\"",
+            "options": {
+                "shell": {
+                    "executable": "powershell.exe",
+                },
+            },
             "problemMatcher": []
         },
         {
             "label": "runUnrealEditor",
             "type": "shell",
-            "command": "powershell.exe -file '${workspaceRoot}/scripts/runUnrealEditor.ps1' -sdkPath 'C:/XCOM 2 War of the Chosen SDK'",
-            "problemMatcher": []
+            "command": "-file \"${workspaceRoot}/scripts/runUnrealEditor.ps1\" -sdkPath \"C:/XCOM 2 War of the Chosen SDK\"",
+            "problemMatcher": [],
+            "options": {
+                "shell": {
+                    "executable": "powershell.exe",
+                },
+            }
         }
     ]
 }

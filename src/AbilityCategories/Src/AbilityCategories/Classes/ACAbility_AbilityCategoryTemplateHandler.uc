@@ -5,9 +5,9 @@ var config array<AbilityCategory> AbilityCategories;
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
-	local AbilityCategoryData IteratorData;
+	local AbilityCategory IteratorData;
 
-	foreach AbilityCategories(IteratorData) {
+	foreach default.AbilityCategories(IteratorData) {
 		Templates.AddItem(CreateCategory(IteratorData));
 	}
 

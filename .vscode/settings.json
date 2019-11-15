@@ -1,5 +1,8 @@
 {
-    "workbench.colorTheme": "Piggy Light (rainglow)",
+    "mod.sdkpath": "W:/SteamLibrary/steamapps/common/XCOM 2 War of the Chosen SDK",
+    "mod.gamepath": "W:/SteamLibrary/steamapps/common/XCOM 2",
+    "mod.amlpath": "W:/Uploader/Binaries/Firaxis.SteamWorkshop.exe",
+    "workbench.colorTheme": "Railgun",
     "files.exclude": {
         "**/.classpath": true,
         "**/.project": true,

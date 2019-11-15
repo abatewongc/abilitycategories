@@ -1,23 +1,42 @@
-class ACUITacticalHUD_AbilityCategory extends UITacticalHUD_Ability config (AbilityCategories)
+class ACUITacticalHUD_AbilityCategory extends UITacticalHUD_Ability config (AbilityCategories);
 
-private var bool IsCurrentlyAnAbility;
-private var name ParentCategoryName; 
+var private bool IsCurrentlyAnAbility;
+var private name ParentCategoryName; 
+var private AbilityCategory CurrentAbilityCategory;
 
 function bool IsCategory() {
 	return !IsCurrentlyAnAbility;
+}
+
+function AbilityCategory GetCategoryData() {
+	return CurrentAbilityCategory;
+}
+
+function SetCategoryData(AbilityCategory data) {
+	self.CurrentAbilityCategory = `ACD.EmptyCategory;
+	self.CurrentAbilityCategory = data;
 }
 
 function name GetParentCategoryName() {
 	return ParentCategoryName;
 }
 
+simulated function ClearData()
+{
+	IsCurrentlyAnAbility = false;
+	ParentCategoryName = '';
+	CurrentAbilityCategory = `ACD.EmptyCategory;
+	super.ClearData();
+	return;
+}
+
 simulated function UpdateData(int NewIndex, const out AvailableAction AvailableActionInfo) {
 	local AbilityCategoryTemplate CategoryTemplate;
 	local XComGameState_Ability AbilityState;
-	local int Index;
-	local UITacticalHUD_AbilityContainer AbilityContainer;
+	local ACUITacticalHUD_AbilityContainer AbilityContainer;
+	local int iTmp;
 
-	AbilityContainer = UITacticalHUD_AbilityContainer(ParentPanel);
+	AbilityContainer = ACUITacticalHUD_AbilityContainer(ParentPanel);
 	if(AbilityContainer == none) {
 		`LOG("Could not find Parent Panel for ACUITacticalHUD_AbilityCategory! Things are gonna get weird.", true, 'AbilityCategories');
 	}
@@ -33,7 +52,8 @@ simulated function UpdateData(int NewIndex, const out AvailableAction AvailableA
 	if(CategoryTemplate == none) {
 		// this is really an ability, not an abilitycategory
 		IsCurrentlyAnAbility = true;
-		return super.UpdateData(NewIndex, AvailableActionInfo)
+		super.UpdateData(NewIndex, AvailableActionInfo);
+		return;
 	}
 
 	// categories are always available (currently)

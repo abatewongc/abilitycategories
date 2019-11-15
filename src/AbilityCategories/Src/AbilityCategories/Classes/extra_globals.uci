@@ -28,3 +28,6 @@
 `define Example
 `endif
 */
+
+`define ACD class'AbilityCategoryManager'.default
+`define ACLOG(msg) `LOG(`msg, true, 'AbilityCategories')

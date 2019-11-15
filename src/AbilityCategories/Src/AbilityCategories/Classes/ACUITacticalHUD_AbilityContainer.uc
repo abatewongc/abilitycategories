@@ -1,87 +1,18 @@
 //----------------------------------------------------------------------------
 //  *********   FIRAXIS SOURCE CODE   ******************
-//  FILE:	UITacticalHUD_AbilityContainer.uc
+//  FILE:	ACUITacticalHUD_AbilityContainer.uc
 //  AUTHOR:  Brit Steiner, Tronster
 //  PURPOSE: Containers holding current soldiers ability icons.
 //----------------------------------------------------------------------------
 //  Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
 //----------------------------------------------------------------------------
 
-class UITacticalHUD_AbilityContainer extends UIPanel
+class ACUITacticalHUD_AbilityContainer extends UITacticalHUD_AbilityContainer
 	dependson( X2GameRuleset )
 	dependson( UITacticalHUD )
 	dependson( UIAnchoredMessageMgr);
 
-// These values must be mirrored in the AbilityContainer actionscript file.
-const MAX_NUM_ABILITIES = 30;
-const MAX_NUM_ABILITIES_PER_ROW = 15;
-const MAX_NUM_ABILITIES_PER_ROW_BAR = 15;
-
-var bool bShownAbilityError;
-
-var int						m_iCurrentIndex;	// Index of selected item.
-var int						m_iPreviousIndexForSecondaryMovement;
-
-
-var bool LastSelectionPermitsImmediateSelect;
-var Actor LastTargetActor;
-var int ActiveAbilities;
-var int TargetIndex;
-var int ForceSelectNextTargetID;
-
-var array<AvailableAction> m_arrAbilities;
-var array<UITacticalHUD_Ability> m_arrUIAbilities;
-var array<UITacticalHUD_AbilityCategory> m_arrUIAbilityCategories;
-
 var name CurrentAbilityCategory;
-
-var int			 		m_iMouseTargetedAbilityIndex;	//Captures the targeted ability clicked by the mouse 
-var int					m_kWatchVar_Enemy;				// Watching which enemy is targeted 
-var int					m_iUseOnlyAbility;				// Don't allow the user to use any ability except the designated ability. -dwuenschell
-
-var int					  m_iSelectionOnButtonDown;		// The current index when an input is pressed
-
-var X2TargetingMethod TargetingMethod;
-var X2TargetingMethod PrevTargetingMethodUsedForSecondaryTargetingMethodSwap;
-var StateObjectReference LastActiveUnitRef;
-
-var Vector SortReferencePoint;
-var Vector SortOriginPoint;
-var bool bAbilitiesInited;
-//</workshop>
-
-var bool bTutorialMgrInvalidSubmission;
-
-//----------------------------------------------------------------------------
-// LOCALIZATION
-//
-var localized string m_sNoTargetsHelp;
-var localized string m_sNoAmmoHelp;
-var localized string m_sNoMedikitTargetsHelp;
-var localized string m_sNoMedikitChargesHelp;
-var localized string m_sNewDefensiveLabel;
-var localized string m_sNewOffensiveLabel;
-var localized string m_sCanFreeAimHelp;
-var localized string m_sHowToFreeAimHelp;
-var localized string m_sNoTarget;
-var localized string m_strAbilityHoverConfirm;
-
-var localized string m_strHitFriendliesTitle;
-var localized string m_strHitFriendliesBody;
-var localized string m_strHitFriendliesAccept;
-var localized string m_strHitFriendliesCancel;
-
-var localized string m_strHitFriendlyObjectTitle;
-var localized string m_strHitFriendlyObjectBody;
-var localized string m_strHitFriendlyObjectAccept;
-var localized string m_strHitFriendlyObjectCancel;
-
-var localized string m_strAscensionPlatformTitle;
-var localized string m_strAscensionPlatformBody;
-var localized string m_strAscensionPlatformAccept;
-var localized string m_strAscensionPlatformCancel;
-
-var localized string m_strMeleeAttackName;
 
 //----------------------------------------------------------------------------
 // METHODS
@@ -101,7 +32,7 @@ simulated function UITacticalHUD_AbilityContainer InitAbilityContainer()
 		kItem.InitAbilityItem(name("AbilityItem_" $ i));
 		m_arrUIAbilities.AddItem(kItem);
 	}
-	CurrentAbilityCategory = `ACD.ROOT;
+	CurrentAbilityCategory = `ACD.AbilityCategory_ROOT;
 	
 	return self;
 }
@@ -111,7 +42,7 @@ simulated function HandleCategorySelection() {
 
 	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
 	CurrentAbilityCategory = AbilityCategory.GetCategoryData().CategoryName;
-	if(CurrentAbilityCategory == `ACD.BACK) {
+	if(CurrentAbilityCategory == `ACD.AbilityCategory_BACK) {
 		CurrentAbilityCategory = AbilityCategory.GetParentCategoryName();
 	}
 	
@@ -1327,17 +1258,17 @@ simulated function PopulateFlash()
 simulated function bool ShouldShowAbility(X2AbilityTemplate Template) {
 	local name AbilityCategoryName;
 
-	AbilityCategoryName = AbilityCategoryManager.GetCategoryForAbility(Template);
-	if(AbilityCategoryName == `AC.ALWAYS_SHOW) {
+	AbilityCategoryName = class'AbilityCategoryManager'.static.GetCategoryForAbility(Template);
+	if(AbilityCategoryName == `ACD.AbilityCategory_ALWAYS_SHOW) {
 		return true;
 	}
 
 	// This is mostly used for the back button
-	if(AbilityCategoryName == `AC.ALWAYS_SHOW_EXCEPT_ROOT && CurrentAbilityCategory != `ACD.ROOT) {
+	if(AbilityCategoryName == `ACD.AbilityCategory_BACK && CurrentAbilityCategory != `ACD.AbilityCategory_ROOT) {
 		return true;
 	}
 
-	return (AbilityCategoryName == CurrentAbilityCategory.CategoryName);
+	return (AbilityCategoryName == CurrentAbilityCategory);
 }
 
 // Eac hotkey 

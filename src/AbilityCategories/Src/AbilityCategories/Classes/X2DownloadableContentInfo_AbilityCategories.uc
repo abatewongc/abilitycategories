@@ -65,10 +65,25 @@ class X2DownloadableContentInfo_AbilityCategories extends X2DownloadableContentI
 /// <summary>
 /// Called after the Templates have been created (but before they are validated) while this DLC / Mod is installed.
 /// </summary>
-//static event OnPostTemplatesCreated()
-//{
-//
-//}
+static event OnPostTemplatesCreated()
+{
+	local X2CharacterTemplateManager CharacterTemplateManager;
+	local X2CharacterTemplate CharTemplate;
+	local array<X2DataTemplate> DataTemplates;
+	local X2DataTemplate Template, DiffTemplate;
+	local AbilityCategory Iterator;
+
+	CharacterTemplateManager = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
+	foreach CharacterTemplateManager.IterateTemplates(Template, None) {
+		CharacterTemplateManager.FindDataTemplateAllDifficulties(Template.DataName, DataTemplates);
+		foreach DataTemplates(DiffTemplate) {
+			CharTemplate = X2CharacterTemplate(DiffTemplate);
+			foreach class'ACAbility_AbilityCategoryTemplateHandler'.default.AbilityCategories(Iterator) {
+				CharTemplate.Abilities.AddItem(Iterator.AbilityTemplateName);
+			}
+		}
+	}
+}
 
 /// <summary>
 /// Called when the difficulty changes and this DLC is active

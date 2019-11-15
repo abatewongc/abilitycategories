@@ -453,7 +453,7 @@ Write-Host "Copied."
 
 # copy all staged files to the actual game's mods folder
 Write-Host "Copying all staging files to production..."
-Robocopy.exe "$stagingPath" "$gamePath\XCom2-WarOfTheChosen\XComGame\Mods\RisingTides" *.* /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /NP /R:1000000 /W:30
+Robocopy.exe "$stagingPath" "$gamePath\XCom2-WarOfTheChosen\XComGame\Mods\$ModNameCanonical" *.* /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /NP /R:1000000 /W:30
 Write-Host "Copied mod to game directory."
 
 
