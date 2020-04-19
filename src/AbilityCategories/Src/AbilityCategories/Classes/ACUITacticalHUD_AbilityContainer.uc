@@ -12,7 +12,7 @@ class ACUITacticalHUD_AbilityContainer extends UITacticalHUD_AbilityContainer
 	dependson( UITacticalHUD )
 	dependson( UIAnchoredMessageMgr);
 
-var name CurrentAbilityCategory;
+var array<name> AbilityCategoryStack;
 
 //----------------------------------------------------------------------------
 // METHODS
@@ -32,21 +32,47 @@ simulated function UITacticalHUD_AbilityContainer InitAbilityContainer()
 		kItem.InitAbilityItem(name("AbilityItem_" $ i));
 		m_arrUIAbilities.AddItem(kItem);
 	}
-	CurrentAbilityCategory = `ACD.AbilityCategory_ROOT;
+	AbilityCategoryStack.AddItem(`ACD.AbilityCategory_ROOT);
 	
 	return self;
 }
 
 simulated function HandleCategorySelection() {
+	
 	local ACUITacticalHUD_AbilityCategory AbilityCategory;
+	local name CurrentAbilityCategory;
 
 	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
 	CurrentAbilityCategory = AbilityCategory.GetCategoryData().CategoryName;
 	if(CurrentAbilityCategory == `ACD.AbilityCategory_BACK) {
-		CurrentAbilityCategory = AbilityCategory.GetParentCategoryName();
+		PopAbilityCategoryStack();
+	} else {
+		PushAbilityCategoryStack(CurrentAbilityCategory);
 	}
-	
-	PopulateFlash();
+	UpdateAbilitiesArray();
+}
+
+simulated function PopAbilityCategoryStack() {
+	if(AbilityCategoryStack.Length == 1) {
+		`ACLOG("WARNING, TRIED TO POP ROOT CATEGORY!", false, true);
+		return; // Don't pop our root!
+	}
+
+	// remove one element at index 0
+	AbilityCategoryStack.Remove(0, 1);
+}
+
+simulated function PushAbilityCategoryStack(name NewCategory) {
+	AbilityCategoryStack.InsertItem(0, NewCategory);
+}
+
+simulated function ResetAbilityCategoryStack() {
+	AbilityCategoryStack.Length = 0;
+	AbilityCategoryStack.AddItem(`ACD.AbilityCategory_ROOT);
+}
+
+function name GetCurrentAbilityCategory() {
+	return AbilityCategoryStack[0];
 }
 
 simulated function OnInit()
@@ -117,7 +143,8 @@ simulated function bool AbilityRequiresTargetingActivation(int Index)
 	{
 		if (ClassIsChildOf(AbilityState.GetMyTemplate().TargetingMethod, class'X2TargetingMethod_Grenade') ||
 			ClassIsChildOf(AbilityState.GetMyTemplate().TargetingMethod, class'X2TargetingMethod_Cone') ||
-			ClassIsChildOf(AbilityState.GetMyTemplate().TargetingMethod, class'X2TargetingMethod_Line'))
+			ClassIsChildOf(AbilityState.GetMyTemplate().TargetingMethod, class'X2TargetingMethod_Line') ||
+			ClassIsChildOf(AbilityState.GetMyTemplate().TargetingMethod, class'X2TargetingMethod_BlasterLauncher'))
 		{
 			return true;
 		}
@@ -131,7 +158,8 @@ simulated function bool IsTargetingMethodActivated()
 	if (TargetingMethod != none &&
 		(TargetingMethod.IsA('X2TargetingMethod_Grenade') ||
 			TargetingMethod.IsA('X2TargetingMethod_Cone') ||
-			TargetingMethod.IsA('X2TargetingMethod_Line')))
+			TargetingMethod.IsA('X2TargetingMethod_Line') ||
+			TargetingMethod.IsA('X2TargetingMethod_BlasterLauncher')))
 	{
 		return true;
 	}
@@ -420,26 +448,22 @@ simulated function bool OnUnrealCommand(int ucmd, int arg)
 
 simulated function bool AbilityClicked(int index)
 {
-	if( !XComTacticalInput(XComTacticalController(PC).PlayerInput).PreProcessCheckGameLogic( class'UIUtilities_Input'.const.FXS_BUTTON_Y, class'UIUtilities_Input'.const.FXS_ACTION_RELEASE) )
-		return false;
+	local ACUITacticalHUD_AbilityCategory AbilityCategory;
 
-	// For the tutorial, don't allow the user to bring up the HUD by clicking on it if the right trigger is disabled.
-	if( `BATTLE.m_kDesc.m_bIsTutorial )
-	{
-		if( XComTacticalInput(XComTacticalController(PC).PlayerInput).ButtonIsDisabled( class'UIUtilities_Input'.const.FXS_BUTTON_RTRIGGER ) )
-		{
-			PlaySound( SoundCue'SoundUI.NegativeSelection2Cue', true , true );
+	
+	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
+	if(AbilityCategory != none) {
+		`ACLOG("AbilityClicked called: checking if the ability was actually a category!");
+		if(AbilityCategory.IsCategory()) {
+			`ACLOG("It was! Handling category selection!");
+			HandleCategorySelection();
 			return false;
 		}
+		`ACLOG("It wasn't! Proceeding to normal ability confirmation!");
 	}
 
-	//Update the selection based on what the mouse clicked
-	m_iMouseTargetedAbilityIndex = index;
-
-	Movie.Pres.PlayUISound(eSUISound_MenuSelect);
-
-	//If the HUD is closed, then trigger it to open
-	return SelectAbility( m_iMouseTargetedAbilityIndex );
+	// If it's an ability, then just go up the chain
+	return super.AbilityClicked(index);
 }
 
 // Reset any mouse-specific data.
@@ -538,22 +562,13 @@ simulated public function bool OnAccept( optional string strOption = "" )
 
 simulated public function bool ConfirmAbility( optional AvailableAction AvailableActionInfo )
 {
-	local XComGameStateHistory		  History;
-	local array<vector>				 TargetLocations;
-	local AvailableTarget			   AdditionalTarget;
-	local XComGameStateContext		  AbilityContext;
-	local XComGameState_Ability		 AbilityState;
-	local array<TTile>				  PathTiles;
-	local string						ConfirmSound;
-	local ACUITacticalHUD_AbilityCategory AbilityCategory;
-
-	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
-	if(AbilityCategory != none) {
-		if(AbilityCategory.IsCategory()) {
-			HandleCategorySelection();
-			return false;
-		}
-	}
+	local XComGameStateHistory          History;
+	local array<vector>                 TargetLocations;
+	local AvailableTarget               AdditionalTarget;
+	local XComGameStateContext          AbilityContext;
+	local XComGameState_Ability         AbilityState;
+	local array<TTile>                  PathTiles;
+	local string                        ConfirmSound;
 
 	ResetMouse();
 
@@ -799,9 +814,9 @@ public function HitFriendliesAccepted()
 	//{
 	//	kTargetingAction.m_bPleaseHitFriendlies = true;
 
-		// HAX: OnAccept does some state manipulation which requires the state stack to be purged of the popup dialog state.
-		//	  This should not cause a problem since the function above (which calls us) does a state check before poping the dialog state.
-		//	  We need to perform the same call in both functions since cancelling or accepting needs to remove the state - sbatista 6/18/12
+		// HAX:	OnAccept does some state manipulation which requires the state stack to be purged of the popup dialog state.
+		//		This should not cause a problem since the function above (which calls us) does a state check before poping the dialog state.
+		//		We need to perform the same call in both functions since cancelling or accepting needs to remove the state - sbatista 6/18/12
 		if( XComPresentationLayer(Movie.Pres).IsInState( 'State_FriendlyFirePopup' ) )
 			XComPresentationLayer(Movie.Pres).PopState();
 
@@ -850,6 +865,45 @@ simulated function bool CanAcceptAbilityInput()
 
 	return true;
 }
+
+simulated function bool IsAbilityInCurrentCategory(AvailableAction AbilityAvailableInfo) {
+	local name AbilityCategoryName;
+	local X2AbilityTemplate AbilityTemplate;
+	local XComGameState_Ability AbilityState;
+	local XComGameStateHistory History;
+	local name CurrentAbilityCategory;
+
+	History = `XCOMHISTORY;
+
+	AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(AbilityAvailableInfo.AbilityObjectRef.ObjectID));
+	if(AbilityState == none) {
+		return false;
+	}
+
+	AbilityTemplate = AbilityState.GetMyTemplate();
+	if (AbilityTemplate == none){
+		return false;
+	}
+
+	AbilityCategoryName = class'AbilityCategoryManager'.static.GetCategoryForAbility(AbilityTemplate);
+	if(AbilityCategoryName == `ACD.AbilityCategory_ALWAYS_SHOW) {
+		return true;
+	}
+
+	CurrentAbilityCategory = GetCurrentAbilityCategory();
+
+	// Handle the back button
+	if(AbilityTemplate.DataName == `ACD.AbilityCategory_BACK && CurrentAbilityCategory != `ACD.AbilityCategory_ROOT) {
+		return true;
+	}
+
+	if(AbilityTemplate.DataName == `ACD.AbilityCategory_BACK && CurrentAbilityCategory == `ACD.AbilityCategory_ROOT) {
+		return false;
+	}
+
+	return (AbilityCategoryName == CurrentAbilityCategory);
+}
+
 
 simulated static function bool ShouldShowAbilityIcon(out AvailableAction AbilityAvailableInfo, optional out int ShowOnCommanderHUD)
 {
@@ -932,7 +986,7 @@ simulated function UpdateAbilitiesArray()
 		// Obtain unit's ability.
 		AbilityAvailableInfo = UnitInfoCache.AvailableActions[i];
 
-		if(ShouldShowAbilityIcon(AbilityAvailableInfo, bCommanderAbility))
+		if(ShouldShowAbilityIcon(AbilityAvailableInfo, bCommanderAbility) && IsAbilityInCurrentCategory(AbilityAvailableInfo))
 		{
 			//Separate out the command abilities to send to the CommandHUD, and do not want to show them in the regular list. 
 			// Commented out in case we bring CommanderHUD back.
@@ -975,8 +1029,8 @@ simulated function UpdateAbilitiesArray()
 		if( m_iMouseTargetedAbilityIndex == -1 )
 		{
 			// MHU - We reset the ability selection if it's not initialized.
-			//	   We also define the initial shot determined in XGAction_Fire.
-			//	   Otherwise, retain the last selection.
+			//       We also define the initial shot determined in XGAction_Fire.
+			//       Otherwise, retain the last selection.
 			if (m_iCurrentIndex < 0)
 				SetAbilityByIndex( 0 );
 			else
@@ -1211,13 +1265,12 @@ simulated function PopulateFlash()
 			continue;
 		}
 
-		if(!AbilityTemplate.bCommanderAbility && ShouldShowAbility(AbilityTemplate))
+		if(!AbilityTemplate.bCommanderAbility)
 		{
-				m_arrUIAbilities[ActiveAbilities].UpdateData(ActiveAbilities, AvailableActionInfo);
-				ActiveAbilities++;
+			m_arrUIAbilities[ActiveAbilities].UpdateData(ActiveAbilities, AvailableActionInfo);
+			ActiveAbilities++;
 		}
 	}
-	//
 	
 	mc.FunctionNum("SetNumActiveAbilities", ActiveAbilities);
 	
@@ -1253,22 +1306,6 @@ simulated function PopulateFlash()
 	TooltipAbility = UITacticalHUD_AbilityTooltip(Movie.Pres.m_kTooltipMgr.GetChildByName('TooltipAbility'));
 	if(TooltipAbility != none && TooltipAbility.bIsVisible)
 		TooltipAbility.RefreshData();
-}
-
-simulated function bool ShouldShowAbility(X2AbilityTemplate Template) {
-	local name AbilityCategoryName;
-
-	AbilityCategoryName = class'AbilityCategoryManager'.static.GetCategoryForAbility(Template);
-	if(AbilityCategoryName == `ACD.AbilityCategory_ALWAYS_SHOW) {
-		return true;
-	}
-
-	// This is mostly used for the back button
-	if(AbilityCategoryName == `ACD.AbilityCategory_BACK && CurrentAbilityCategory != `ACD.AbilityCategory_ROOT) {
-		return true;
-	}
-
-	return (AbilityCategoryName == CurrentAbilityCategory);
 }
 
 // Eac hotkey 
@@ -1571,10 +1608,10 @@ simulated function int GetFirstUsableAbilityIdx()
 
 simulated function ShowAOE(int Index)
 {
-	local AvailableAction	   AvailableActionInfo;
-	local XComGameState_Ability AbilityState;
-	local XComGameState_Unit UnitState;
-	local XGUnit UnitVisualizer;
+	local AvailableAction			AvailableActionInfo;
+	local XComGameState_Ability		AbilityState;
+	local XComGameState_Unit		UnitState;
+	local XGUnit					UnitVisualizer;
 
 	AvailableActionInfo = m_arrAbilities[Index];
 	if( AvailableActionInfo.AbilityObjectRef.ObjectID == 0 )
@@ -1721,16 +1758,16 @@ simulated function array<AvailableTarget> SortTargets(array<AvailableTarget> Ava
 // Setup an ability. Eventually this should be the ONLY way to select an ability. Everything must route through it.
 simulated function bool SetAbilityByIndex( int AbilityIndex, optional bool ActivatedViaHotKey  )
 {	
-	local UITacticalHUD		 TacticalHUD;
-	local AvailableAction	   AvailableActionInfo;
-	local XComGameState_Ability AbilityState;
-	local XComGameState_Unit	UnitState;
-	local XGUnit				UnitVisualizer;
-	local GameRulesCache_Unit	UnitInfoCache;
-	local int				   PreviousIndex;
-	local int				   DefaultTargetIndex;
-	local name					PreviousInputState;
-	local int					TestTargetIndex;
+	local UITacticalHUD				TacticalHUD;
+	local AvailableAction			AvailableActionInfo;
+	local XComGameState_Ability		AbilityState;
+	local XComGameState_Unit		UnitState;
+	local XGUnit					UnitVisualizer;
+	local GameRulesCache_Unit		UnitInfoCache;
+	local int						PreviousIndex;
+	local int						DefaultTargetIndex;
+	local name						PreviousInputState;
+	local int						TestTargetIndex;
 
 	local XComWorldData			WorldData;
 	local XComLevelVolume		LevelVolume;
@@ -1890,7 +1927,7 @@ simulated function bool SetAbilityByIndex( int AbilityIndex, optional bool Activ
 //Used by the mouse hover tooltip to figure out which ability to get info from 
 simulated function XComGameState_Ability GetAbilityAtIndex( int AbilityIndex )
 {
-	local AvailableAction	   AvailableActionInfo;
+	local AvailableAction		AvailableActionInfo;
 	local XComGameState_Ability AbilityState;
 
 	if( AbilityIndex < 0 || AbilityIndex >= m_arrAbilities.Length )
@@ -1989,8 +2026,8 @@ simulated function int GetSelectedIndex()
 
 simulated function bool CheckForNotifier( XGUnit kUnit )
 {
-	local XGWeapon	  kActiveWeapon;
-	local XGInventory   kInventory;
+	local XGWeapon		kActiveWeapon;
+	local XGInventory	kInventory;
 
 	kInventory = kUnit.GetInventory();
 	kActiveWeapon = kInventory.GetActiveWeapon();

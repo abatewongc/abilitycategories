@@ -86,6 +86,27 @@ static event OnPostTemplatesCreated()
 }
 
 /// <summary>
+/// Called from XComGameState_Unit:GatherUnitAbilitiesForInit after the game has built what it believes is the full list of
+/// abilities for the unit based on character, class, equipment, et cetera. You can add or remove abilities in SetupData.
+/// </summary>
+//static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out array<AbilitySetupData> SetupData, optional XComGameState StartState, optional XComGameState_Player PlayerState, optional bool bMultiplayerDisplay)
+//{ 
+//	local X2AbilityTemplateManager AbilityTemplateMan;
+//	local AbilitySetupData CatergoryData, EmptyData;
+//	local AbilityCategory Iterator;
+//
+//	`ACLOG("FinalizeUnitAbilitiesForInit called for " $ UnitState.GetFullName());
+//
+//	AbilityTemplateMan = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+//	foreach class'ACAbility_AbilityCategoryTemplateHandler'.default.AbilityCategories(Iterator) {
+//		CatergoryData = EmptyData;
+//		CatergoryData.TemplateName = Iterator.AbilityTemplateName;
+//		CatergoryData.Template = AbilityTemplateMan.FindAbilityTemplate(Iterator.AbilityTemplateName);
+//		SetupData.AddItem(CatergoryData);
+//	}
+//}
+
+/// <summary>
 /// Called when the difficulty changes and this DLC is active
 /// </summary>
 //static event OnDifficultyChanged()
@@ -183,15 +204,6 @@ static event OnPostTemplatesCreated()
 //static function bool AbilityTagExpandHandler(string InString, out string OutString)
 //{
 //	return false;
-//}
-
-/// <summary>
-/// Called from XComGameState_Unit:GatherUnitAbilitiesForInit after the game has built what it believes is the full list of
-/// abilities for the unit based on character, class, equipment, et cetera. You can add or remove abilities in SetupData.
-/// </summary>
-//static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out array<AbilitySetupData> SetupData, optional XComGameState StartState, optional XComGameState_Player PlayerState, optional bool bMultiplayerDisplay)
-//{
-//
 //}
 
 /// <summary>

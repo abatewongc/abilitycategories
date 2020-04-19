@@ -38,8 +38,8 @@
     <Content Include="Src\XComGaem\X2AbilityTemplate.uc" />
     <Content Include="Src\AbilityCategories\Classes\AbilityCategoryTemplate.uc" />
     <Content Include="Src\AbilityCategories\Classes\ACUITacticalHUD_AbilityContainer.uc" />
-    <Content Include="Config\AbilityCategoryData.ini" />
     <Content Include="Src\AbilityCategories\Classes\ACCommandManager.uc" />
+    <Content Include="Config\XComAbilityCategoryData.ini" />
   </ItemGroup>
   <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
 </Project>

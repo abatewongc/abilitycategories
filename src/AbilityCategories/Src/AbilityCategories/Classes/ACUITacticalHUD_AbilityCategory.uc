@@ -1,11 +1,20 @@
+//----------------------------------------------------------------------------
+//  *********   FIRAXIS SOURCE CODE   ******************
+//  FILE:	ACUITacticalHUD_AbilityCategory.uc
+//  AUTHOR:  Brit Steiner, Sam Batista
+//  PURPOSE: Containers holding current soldiers ability icons.
+//----------------------------------------------------------------------------
+//  Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
+//----------------------------------------------------------------------------
+
 class ACUITacticalHUD_AbilityCategory extends UITacticalHUD_Ability config (AbilityCategories);
 
-var private bool IsCurrentlyAnAbility;
+var private bool IsCurrentlyCategory;
 var private name ParentCategoryName; 
 var private AbilityCategory CurrentAbilityCategory;
 
 function bool IsCategory() {
-	return !IsCurrentlyAnAbility;
+	return IsCurrentlyCategory;
 }
 
 function AbilityCategory GetCategoryData() {
@@ -13,7 +22,6 @@ function AbilityCategory GetCategoryData() {
 }
 
 function SetCategoryData(AbilityCategory data) {
-	self.CurrentAbilityCategory = `ACD.EmptyCategory;
 	self.CurrentAbilityCategory = data;
 }
 
@@ -21,14 +29,23 @@ function name GetParentCategoryName() {
 	return ParentCategoryName;
 }
 
-simulated function ClearData()
-{
-	IsCurrentlyAnAbility = false;
+simulated function ClearCategoryData() {
+	IsCurrentlyCategory = false;
 	ParentCategoryName = '';
 	CurrentAbilityCategory = `ACD.EmptyCategory;
-	super.ClearData();
-	return;
 }
+
+simulated function ClearData()
+{
+	if (!bIsInited)
+	{
+		return;
+	}
+	super.ClearData();
+	ClearCategoryData();
+}
+
+
 
 simulated function UpdateData(int NewIndex, const out AvailableAction AvailableActionInfo) {
 	local AbilityCategoryTemplate CategoryTemplate;
@@ -40,21 +57,23 @@ simulated function UpdateData(int NewIndex, const out AvailableAction AvailableA
 	if(AbilityContainer == none) {
 		`LOG("Could not find Parent Panel for ACUITacticalHUD_AbilityCategory! Things are gonna get weird.", true, 'AbilityCategories');
 	}
-	
-	ParentCategoryName = AbilityContainer.CurrentAbilityCategory;
 
+	super.UpdateData(NewIndex, AvailableActionInfo);
+	
+	ParentCategoryName = AbilityContainer.GetCurrentAbilityCategory();
 	Index = NewIndex;
-	IsCurrentlyAnAbility = false;
 
 	//AvailableActionInfo function parameter holds UI-SPECIFIC data such as "is this ability visible to the HUD?" and "is this ability available"?
 	AbilityState = XComGameState_Ability(`XCOMHISTORY.GetGameStateForObjectID(AvailableActionInfo.AbilityObjectRef.ObjectID));
 	CategoryTemplate = AbilityCategoryTemplate(AbilityState.GetMyTemplate());
 	if(CategoryTemplate == none) {
 		// this is really an ability, not an abilitycategory
-		IsCurrentlyAnAbility = true;
-		super.UpdateData(NewIndex, AvailableActionInfo);
+		ClearCategoryData();
 		return;
 	}
+	
+	IsCurrentlyCategory = true;
+	SetCategoryData(CategoryTemplate.CategoryData);
 
 	// categories are always available (currently)
 	SetAvailable(true);
@@ -88,6 +107,7 @@ simulated function UpdateData(int NewIndex, const out AvailableAction AvailableA
 	RefreshShine();
 }
 
+/*
 simulated function OnMouseEvent(int cmd, array<string> args)
 {
 	local UITacticalHUD_AbilityContainer AbilityContainer;
@@ -119,7 +139,7 @@ simulated function OnMouseEvent(int cmd, array<string> args)
 		}
 		break;
 	}
-}
+}*/
 
 
 

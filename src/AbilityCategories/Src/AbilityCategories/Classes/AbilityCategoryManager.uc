@@ -13,13 +13,13 @@ var AbilityCategory EmptyCategory;
 
 defaultproperties
 {
-	AbilityCategory_Standard = "category_standard";
-	AbilityCategory_Psionic = "category_psionic";
-	AbilityCategory_Misc = "category_misc";
-	AbilityCategory_ROOT = "category_ROOT";
-	AbilityCategory_BACK = "category_BACK";
-	AbilityCategory_ALWAYS_SHOW = "category_ALWAYS_SHOW";
-
+	AbilityCategory_Standard = "categoryStandard";
+	AbilityCategory_Psionic = "categoryPsionic";
+	AbilityCategory_Misc = "categoryMisc";
+	AbilityCategory_ROOT = "categoryROOT";
+	AbilityCategory_ALWAYS_SHOW = "categoryALWAYSSHOW";
+	
+	AbilityCategory_BACK = "AbilityCategory_BACK";
 	EmptyCategory=(CategoryName="",CategoryColor="",AbilityTemplateName="",IconImage="",HUDPriority=0);
 	
 }
@@ -31,13 +31,15 @@ static function AbilityCategoryManager GetAbilityCategoryManager()
 
 static function name GetCategoryForAbility(X2AbilityTemplate Template) {
 	local int index;
+	local AbilityCategoryTemplate ACTemplate;
 
 	index = default.AbilityCategoryAssociations.Find('AbilityTemplateName', Template.DataName);
 	if(index != INDEX_NONE) {
 		return default.AbilityCategoryAssociations[index].CategoryName;
 	} else {
-		// TODO: TEMPORARY
-		if(AbilityCategoryTemplate(Template) != none) {
+		// TODO: TEMPORARY, this doesn't support subcategories
+		ACTemplate = AbilityCategoryTemplate(Template);
+		if(ACTemplate != none) {
 			return default.AbilityCategory_ROOT;
 		}
 		// do our best to find what category this is gonna go in.

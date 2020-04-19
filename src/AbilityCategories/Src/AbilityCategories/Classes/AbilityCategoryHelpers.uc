@@ -4,5 +4,5 @@ var AbilityCategory RootAbilityCategory;
 
 defaultproperties
 {
-	RootAbilityCategory=(CategoryName="category_ROOT",CategoryColor="9acbcb") // NORMAL_HTML_COLOR
+	RootAbilityCategory=(CategoryName="categoryROOT",CategoryColor="9acbcb") // NORMAL_HTML_COLOR
 }

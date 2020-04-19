@@ -7,8 +7,11 @@ static function array<X2DataTemplate> CreateTemplates()
 	local array<X2DataTemplate> Templates;
 	local AbilityCategory IteratorData;
 
+	`ACLOG("Adding Category Templates!");
+
 	foreach default.AbilityCategories(IteratorData) {
 		Templates.AddItem(CreateCategory(IteratorData));
+		`ACLOG("Added category: " $ IteratorData.AbilityTemplateName);
 	}
 
 	return Templates;
@@ -38,6 +41,8 @@ static function X2AbilityTemplate CreateCategory(AbilityCategory CategoryData) {
 	Template.BuildNewGameStateFn = Empty_BuildGameState;
 	// Note: no visualization on purpose!
 	Template.bCrossClassEligible = false;
+
+	Template.CategoryData = CategoryData;
 
 	return Template;
 }

@@ -7,33 +7,37 @@
             "command": "-file \"${workspaceRoot}/scripts/build.ps1\" -mod \"AbilityCategories\" -srcDirectory \"${workspaceRoot}/src\" -sdkPath \"${config:mod.sdkpath}\" -gamePath \"${config:mod.gamepath}\"",
             "options": {
                 "shell": {
-                    "executable": "powershell.exe",
-                },
+                    "executable": "powershell.exe"
+                }
             },
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": [{
-                "owner": "unrealscript",
-                "fileLocation": ["absolute"],
-                "pattern": {
-                    "regexp": "^(.*):([0-9]*) : (Warning|Error), ([^\n]*)",
-                    "file": 1,
-                    "line": 2,
-                    "severity": 3,
-                    "message": 4
+            "problemMatcher": [
+                {
+                    "owner": "unrealscript",
+                    "fileLocation": [
+                        "absolute"
+                    ],
+                    "pattern": {
+                        "regexp": "^(.*):([0-9]*) : (Warning|Error), ([^\n]*)",
+                        "file": 1,
+                        "line": 2,
+                        "severity": 3,
+                        "message": 4
+                    }
                 }
-            }]
+            ]
         },
         {
             "label": "debug",
             "type": "shell",
             "command": "-file \"${workspaceRoot}/scripts/run.ps1\" -gamePath \"C:/XCOM 2\"",
             "options": {
-               "shell": {
-                    "executable": "powershell.exe",
-                },
+                "shell": {
+                    "executable": "powershell.exe"
+                }
             },
             "problemMatcher": []
         },
@@ -43,8 +47,8 @@
             "command": "-file \"${workspaceRoot}/scripts/publish.ps1\" -amlPath \"\"",
             "options": {
                 "shell": {
-                    "executable": "powershell.exe",
-                },
+                    "executable": "powershell.exe"
+                }
             },
             "problemMatcher": []
         },
@@ -55,9 +59,15 @@
             "problemMatcher": [],
             "options": {
                 "shell": {
-                    "executable": "powershell.exe",
-                },
+                    "executable": "powershell.exe"
+                }
             }
+        },
+        {
+            "label": "launchAML",
+            "type": "process",
+            "command": "C:\\Users\\cblue_000\\Downloads\\XCOM2ModLauncher_1.2.4\\XCOM2 Launcher.exe",
+            "problemMatcher": []
         }
     ]
 }
