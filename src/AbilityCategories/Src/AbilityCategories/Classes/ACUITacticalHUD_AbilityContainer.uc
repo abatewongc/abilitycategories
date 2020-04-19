@@ -44,11 +44,18 @@ simulated function HandleCategorySelection() {
 
 	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
 	CurrentAbilityCategory = AbilityCategory.GetCategoryData().CategoryName;
+
+	`ACLOG("Handling Category Selection...");
+	`ACLOG("Index is " $ m_iCurrentIndex);
+	`ACLOG("CurrentAbilityCategory is " $ CurrentAbilityCategory);
+
 	if(CurrentAbilityCategory == `ACD.AbilityCategory_BACK) {
 		PopAbilityCategoryStack();
 	} else {
 		PushAbilityCategoryStack(CurrentAbilityCategory);
 	}
+	
+	NotifyCanceled();
 	UpdateAbilitiesArray();
 }
 
@@ -446,14 +453,32 @@ simulated function bool OnUnrealCommand(int ucmd, int arg)
 	return bHandled;
 }
 
+function DirectConfirmAbility(int index, optional bool ActivateViaHotKey)
+{
+	local ACUITacticalHUD_AbilityCategory AbilityCategory;
+/*
+	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
+	if(AbilityCategory != none) {
+		`ACLOG("DirectConfirmAbility called: checking if the ability was actually a category!");
+		if(AbilityCategory.IsCategory()) {
+			`ACLOG("It was! Handling category selection!");
+			HandleCategorySelection();
+			return;
+		}
+		`ACLOG("It wasn't! Proceeding to normal ability confirmation!");
+	}
+*/
+	// If it's an ability, then just go up the chain
+	super.DirectConfirmAbility(index, ActivateViaHotKey);
+}
+
 simulated function bool AbilityClicked(int index)
 {
 	local ACUITacticalHUD_AbilityCategory AbilityCategory;
-
-	
+/*
 	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
 	if(AbilityCategory != none) {
-		`ACLOG("AbilityClicked called: checking if the ability was actually a category!");
+		`ACLOG("DirectConfirmAbility called: checking if the ability was actually a category!");
 		if(AbilityCategory.IsCategory()) {
 			`ACLOG("It was! Handling category selection!");
 			HandleCategorySelection();
@@ -461,7 +486,7 @@ simulated function bool AbilityClicked(int index)
 		}
 		`ACLOG("It wasn't! Proceeding to normal ability confirmation!");
 	}
-
+*/
 	// If it's an ability, then just go up the chain
 	return super.AbilityClicked(index);
 }
@@ -501,59 +526,6 @@ function DirectSelectAbility( int index )
 	}
 }
 
-function DirectConfirmAbility(int index, optional bool ActivateViaHotKey)
-{
-	// For the tutorial, don't allow the user to bring up the HUD by clicking on it if the right trigger is disabled.
-	if( `BATTLE.m_kDesc.m_bIsTutorial )
-	{
-		if( XComTacticalInput(XComTacticalController(PC).PlayerInput).ButtonIsDisabled( class'UIUtilities_Input'.const.FXS_BUTTON_RTRIGGER ) )
-		{
-			PlaySound( SoundCue'SoundUI.NegativeSelection2Cue', true , true );
-			return;
-		}
-	}
-
-	//Check if it's in range, and bail if out of range 
-	if( index >= m_arrAbilities.Length - UITacticalHUD(screen).m_kMouseControls.CommandAbilities.Length)
-	{
-		Movie.Pres.PlayUISound(eSUISound_MenuClose); 
-		return; 
-	}
-
-	if (m_iMouseTargetedAbilityIndex != index)
-	{
-		if (ActivateViaHotKey)
-		{
-			m_arrUIAbilities[m_iCurrentIndex].OnLoseFocus();
-		}
-		//Update the selection 
-		m_iMouseTargetedAbilityIndex = index;
-		if (ActivateViaHotKey)
-		{
-			if (!SelectAbility(m_iMouseTargetedAbilityIndex, ActivateViaHotKey))
-			{
-				UITacticalHUD(Owner).CancelTargetingAction();
-				return;
-			}
-		}
-		else
-		{
-			SelectAbility(m_iMouseTargetedAbilityIndex, ActivateViaHotKey);
-		}
-		Movie.Pres.PlayUISound(eSUISound_MenuSelect);
-		if (ActivateViaHotKey)
-		{
-			Invoke("Deactivate");
-			PopulateFlash();
-		}
-	}
-	else
-	{
-		m_iSelectionOnButtonDown = index;
-		OnAccept();
-	}
-}
-
 simulated public function bool OnAccept( optional string strOption = "" )
 {
 	m_arrUIAbilities[m_iCurrentIndex].OnLoseFocus();
@@ -569,6 +541,18 @@ simulated public function bool ConfirmAbility( optional AvailableAction Availabl
 	local XComGameState_Ability         AbilityState;
 	local array<TTile>                  PathTiles;
 	local string                        ConfirmSound;
+	local ACUITacticalHUD_AbilityCategory AbilityCategory;
+
+	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
+	if(AbilityCategory != none) {
+		`ACLOG("DirectConfirmAbility called: checking if the ability was actually a category!");
+		if(AbilityCategory.IsCategory()) {
+			`ACLOG("It was! Handling category selection!");
+			HandleCategorySelection();
+			return false;
+		}
+		`ACLOG("It wasn't! Proceeding to normal ability confirmation!");
+	}
 
 	ResetMouse();
 
@@ -1548,43 +1532,6 @@ simulated function bool DirectTargetObject(int TargetObjectID, optional bool Aut
 
 	// we were unable to set the target with the current ability, lets try the default ability
 	return DirectTargetObjectWithDefaultTargetingAbility(TargetObjectID, AutoConfirmIfFreeCost);
-}
-
-
-// Select ability at index, and then update all associated visuals. 
-simulated function bool SelectAbility( int index, optional bool ActivateViaHotKey )
-{
-	if (m_iCurrentIndex < 0)
-	{
-		mc.FunctionNum("animateIn", MAX_NUM_ABILITIES);
-	}
-
-	if(!SetAbilityByIndex( index, ActivateViaHotKey ))
-	{
-		return false;
-	}
-
-	if (`ISCONTROLLERACTIVE)
-	{
-		Invoke("Activate");
-	}
-	
-	PopulateFlash();
-	UpdateWatchVariables();
-	CheckForHelpMessages();
-
-	UITacticalHUD(Owner).UpdateCharacterInfoButton();
-	UITacticalHUD(Owner).UpdateReaperHUD();
-	UITacticalHUD(Owner).UpdateChosenHUDPreview();
-
-	// Update targetting reticules
-	if(UITacticalHUD(Owner).GetReticleMode() != eUIReticle_NONE && GetTargetingMethod() != none)
-		UITacticalHUD(Owner).TargetEnemy(GetTargetingMethod().GetTargetedObjectID());
-
-	//Update sightline HUD (targeting head icons) 
-	//XComPresentationLayer(Movie.Pres).m_kSightlineHUD.RefreshSelectedEnemy();
-
-	return true;
 }
 
 simulated function int GetFirstUsableAbilityIdx()

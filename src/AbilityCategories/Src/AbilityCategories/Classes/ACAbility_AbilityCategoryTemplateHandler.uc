@@ -43,6 +43,7 @@ static function X2AbilityTemplate CreateCategory(AbilityCategory CategoryData) {
 	Template.bCrossClassEligible = false;
 
 	Template.CategoryData = CategoryData;
+	Template.bBypassAbilityConfirm = true;
 
 	return Template;
 }

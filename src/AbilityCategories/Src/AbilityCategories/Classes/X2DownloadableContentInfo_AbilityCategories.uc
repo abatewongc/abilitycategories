@@ -79,7 +79,9 @@ static event OnPostTemplatesCreated()
 		foreach DataTemplates(DiffTemplate) {
 			CharTemplate = X2CharacterTemplate(DiffTemplate);
 			foreach class'ACAbility_AbilityCategoryTemplateHandler'.default.AbilityCategories(Iterator) {
-				CharTemplate.Abilities.AddItem(Iterator.AbilityTemplateName);
+				if(CharTemplate.Abilities.Find(Iterator.AbilityTemplateName) == INDEX_NONE) {
+					CharTemplate.Abilities.AddItem(Iterator.AbilityTemplateName);
+				}
 			}
 		}
 	}
