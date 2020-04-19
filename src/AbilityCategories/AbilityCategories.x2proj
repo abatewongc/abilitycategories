@@ -40,6 +40,7 @@
     <Content Include="Src\AbilityCategories\Classes\ACUITacticalHUD_AbilityContainer.uc" />
     <Content Include="Src\AbilityCategories\Classes\ACCommandManager.uc" />
     <Content Include="Config\XComAbilityCategoryData.ini" />
+    <Content Include="Content\UILibrary_PerkCategories.upk" />
   </ItemGroup>
   <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
 </Project>

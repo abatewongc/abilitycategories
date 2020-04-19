@@ -1,1 +1,17 @@
 ;This is a text file.
+
+
+[AbilityCategory_Standard AbilityCategoryTemplate]
+LocFriendlyName="Category: Standard"
+
+[AbilityCategory_Psionic AbilityCategoryTemplate]
+LocFriendlyName="Category: Psionic"
+
+[AbilityCategory_Weapon AbilityCategoryTemplate]
+LocFriendlyName="Category: Weapon"
+
+[AbilityCategory_Misc AbilityCategoryTemplate]
+LocFriendlyName="Category: Misc"
+
+[AbilityCategory_BACK AbilityCategoryTemplate]
+LocFriendlyName="Back"

@@ -1,1 +1,1 @@
-As the X2WOTC modding scene as advanced, more and more mods of ever-growing complexity have attempted to steal valuable space on the poor little ability bar. Even though mods such as X and Y have come out in short-sighted attempt to solve this problem, in the end, they have only encouraged it. No more. AbilityCategories will solve this once and for all.
+Adds an ability category framework and several default categories to XCOM2

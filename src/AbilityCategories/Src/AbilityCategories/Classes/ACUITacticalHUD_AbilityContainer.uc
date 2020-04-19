@@ -453,44 +453,6 @@ simulated function bool OnUnrealCommand(int ucmd, int arg)
 	return bHandled;
 }
 
-function DirectConfirmAbility(int index, optional bool ActivateViaHotKey)
-{
-	local ACUITacticalHUD_AbilityCategory AbilityCategory;
-/*
-	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
-	if(AbilityCategory != none) {
-		`ACLOG("DirectConfirmAbility called: checking if the ability was actually a category!");
-		if(AbilityCategory.IsCategory()) {
-			`ACLOG("It was! Handling category selection!");
-			HandleCategorySelection();
-			return;
-		}
-		`ACLOG("It wasn't! Proceeding to normal ability confirmation!");
-	}
-*/
-	// If it's an ability, then just go up the chain
-	super.DirectConfirmAbility(index, ActivateViaHotKey);
-}
-
-simulated function bool AbilityClicked(int index)
-{
-	local ACUITacticalHUD_AbilityCategory AbilityCategory;
-/*
-	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
-	if(AbilityCategory != none) {
-		`ACLOG("DirectConfirmAbility called: checking if the ability was actually a category!");
-		if(AbilityCategory.IsCategory()) {
-			`ACLOG("It was! Handling category selection!");
-			HandleCategorySelection();
-			return false;
-		}
-		`ACLOG("It wasn't! Proceeding to normal ability confirmation!");
-	}
-*/
-	// If it's an ability, then just go up the chain
-	return super.AbilityClicked(index);
-}
-
 // Reset any mouse-specific data.
 // Expected use: keyboard or controller nav. 
 function ResetMouse()
