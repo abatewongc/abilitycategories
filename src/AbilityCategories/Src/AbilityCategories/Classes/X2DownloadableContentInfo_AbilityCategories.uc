@@ -75,6 +75,40 @@ static function bool IsDebuggingEnabled() {
 /// </summary>
 static event OnPostTemplatesCreated()
 {
+	GenerateAndCacheCategoryData();
+	AddCategoriesToUnitTemplates();
+}
+
+private static function GenerateAndCacheCategoryData() {
+	local X2DownloadableContentInfo_AbilityCategories dlcInfo;
+	local array<name> AbilityTemplateNames;
+	local name AbilityTemplateName;
+	local X2AbilityTemplate AbilityTemplate;
+	local array<X2AbilityTemplate> AbilityTemplates;
+	local X2AbilityTemplateManager AbilityTemplateMgr;
+	local int i;
+
+	AbilityTemplateMgr = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+	AbilityTemplateMgr.GetTemplateNames(AbilityTemplateNames);
+	foreach AbilityTemplateNames(AbilityTemplateName) {
+		AbilityTemplates.Length = 0;
+		AbilityTemplateMgr.FindAbilityTemplateAllDifficulties(AbilityTemplateName, AbilityTemplates);
+		foreach AbilityTemplates(AbilityTemplate) {
+			if(!`ALG.IsAbilityInputTriggered(AbilityTemplate)) {
+				continue; // this is not an ability that will be placed in the abilitycontainer
+			}
+
+			if(`ALG.IsAbilityConsumableExplosive(AbilityTemplate)) {
+				
+			}
+
+
+		}
+	}
+
+}
+
+private static function AddCategoriesToUnitTemplates() {
 	local X2CharacterTemplateManager CharacterTemplateManager;
 	local X2CharacterTemplate CharTemplate;
 	local array<X2DataTemplate> DataTemplates;

@@ -21,14 +21,14 @@ var array<name> AbilityCategoryStack;
 simulated function UITacticalHUD_AbilityContainer InitAbilityContainer()
 {
 	local int i;
-	local ACUITacticalHUD_AbilityCategory kItem;
+	local UITacticalHUD_Ability kItem;
 
 	InitPanel();
 
 	// Pre-cache UI data array
 	for(i = 0; i < MAX_NUM_ABILITIES; ++i)
 	{	
-		kItem = Spawn(class'ACUITacticalHUD_AbilityCategory', self);
+		kItem = Spawn(class'UITacticalHUD_Ability', self);
 		kItem.InitAbilityItem(name("AbilityItem_" $ i));
 		m_arrUIAbilities.AddItem(kItem);
 	}
@@ -849,7 +849,7 @@ simulated function bool IsAbilityInCurrentCategory(AvailableAction AbilityAvaila
 		return true;
 	}
 
-	AbilityCategoryName = class'AbilityCategoryManager'.static.GetCategoryForAbility(AbilityTemplate);
+	AbilityCategoryName = class'AbilityCategoryManager'.static.GetCategoryForAbility(AbilityTemplate, AbilityState);
 	if(AbilityCategoryName == `ACD.AbilityCategory_ALWAYS_SHOW) {
 		return true;
 	}

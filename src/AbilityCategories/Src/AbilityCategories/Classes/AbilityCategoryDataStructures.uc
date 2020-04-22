@@ -9,6 +9,6 @@ struct AbilityCategory {
 };
 
 struct AbilityCategoryAssociation {
-    var name CategoryName;
     var name AbilityTemplateName;
+    var name CategoryName;
 };
