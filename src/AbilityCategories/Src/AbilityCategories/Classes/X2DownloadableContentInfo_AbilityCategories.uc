@@ -1,4 +1,12 @@
-class X2DownloadableContentInfo_AbilityCategories extends X2DownloadableContentInfo;
+class X2DownloadableContentInfo_AbilityCategories extends X2DownloadableContentInfo config(AbilityCategoryData);
+
+var config bool DebuggingEnabled;
+var config int AbilityCategorizationThreshold;
+var config bool ResetCategoryOnUnitSelection;
+
+static function bool IsDebuggingEnabled() {
+	return default.DebuggingEnabled;
+}
 
 /// <summary>
 /// This method is run if the player loads a saved game that was created prior to this DLC / Mod being installed, and allows the 

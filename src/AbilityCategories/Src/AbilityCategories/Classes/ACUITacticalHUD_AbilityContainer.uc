@@ -45,9 +45,9 @@ simulated function HandleCategorySelection() {
 	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
 	CurrentAbilityCategory = AbilityCategory.GetCategoryData().CategoryName;
 
-	`ACLOG("Handling Category Selection...");
-	`ACLOG("Index is " $ m_iCurrentIndex);
-	`ACLOG("CurrentAbilityCategory is " $ CurrentAbilityCategory);
+	//`ACLOG("Handling Category Selection...");
+	//`ACLOG("Index is " $ m_iCurrentIndex);
+	//`ACLOG("CurrentAbilityCategory is " $ CurrentAbilityCategory);
 
 	if(CurrentAbilityCategory == `ACD.AbilityCategory_BACK) {
 		PopAbilityCategoryStack();
@@ -56,7 +56,7 @@ simulated function HandleCategorySelection() {
 	}
 	
 	NotifyCanceled();
-	UpdateAbilitiesArray();
+	UpdateAbilitiesArrayInternal();
 }
 
 simulated function PopAbilityCategoryStack() {
@@ -507,13 +507,13 @@ simulated public function bool ConfirmAbility( optional AvailableAction Availabl
 
 	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
 	if(AbilityCategory != none) {
-		`ACLOG("DirectConfirmAbility called: checking if the ability was actually a category!");
+		//`ACLOG("DirectConfirmAbility called: checking if the ability was actually a category!");
 		if(AbilityCategory.IsCategory()) {
-			`ACLOG("It was! Handling category selection!");
+			//`ACLOG("It was! Handling category selection!");
 			HandleCategorySelection();
 			return false;
 		}
-		`ACLOG("It wasn't! Proceeding to normal ability confirmation!");
+		//`ACLOG("It wasn't! Proceeding to normal ability confirmation!");
 	}
 
 	ResetMouse();
@@ -812,9 +812,10 @@ simulated function bool CanAcceptAbilityInput()
 	return true;
 }
 
-simulated function bool IsAbilityInCurrentCategory(AvailableAction AbilityAvailableInfo) {
+simulated function bool IsAbilityInCurrentCategory(AvailableAction AbilityAvailableInfo, bool disableCategoryUI) {
 	local name AbilityCategoryName;
 	local X2AbilityTemplate AbilityTemplate;
+	local AbilityCategoryTemplate AbilityCategoryTemplate;
 	local XComGameState_Ability AbilityState;
 	local XComGameStateHistory History;
 	local name CurrentAbilityCategory;
@@ -831,20 +832,26 @@ simulated function bool IsAbilityInCurrentCategory(AvailableAction AbilityAvaila
 		return false;
 	}
 
+	CurrentAbilityCategory = GetCurrentAbilityCategory();
+	AbilityCategoryTemplate = AbilityCategoryTemplate(AbilityTemplate);
+	if(AbilityCategoryTemplate != none) {
+		// never show categories if we've disabled the category UI
+		if(disableCategoryUI) {
+			return false;
+		}
+
+		// Handle the back button
+		if(AbilityTemplate.DataName == `ACD.AbilityCategory_BACK) {
+			return CurrentAbilityCategory != `ACD.AbilityCategory_ROOT;
+		}
+	} else if(disableCategoryUI) {
+		// if this isn't a category, and we've disabled the category UI
+		return true;
+	}
+
 	AbilityCategoryName = class'AbilityCategoryManager'.static.GetCategoryForAbility(AbilityTemplate);
 	if(AbilityCategoryName == `ACD.AbilityCategory_ALWAYS_SHOW) {
 		return true;
-	}
-
-	CurrentAbilityCategory = GetCurrentAbilityCategory();
-
-	// Handle the back button
-	if(AbilityTemplate.DataName == `ACD.AbilityCategory_BACK && CurrentAbilityCategory != `ACD.AbilityCategory_ROOT) {
-		return true;
-	}
-
-	if(AbilityTemplate.DataName == `ACD.AbilityCategory_BACK && CurrentAbilityCategory == `ACD.AbilityCategory_ROOT) {
-		return false;
 	}
 
 	return (AbilityCategoryName == CurrentAbilityCategory);
@@ -903,14 +910,25 @@ simulated static function bool ShouldShowAbilityIcon(out AvailableAction Ability
 
 simulated function UpdateAbilitiesArray() 
 {
+	if(`CONFIG.ResetCategoryOnUnitSelection)
+	{
+		ResetAbilityCategoryStack();
+	}
+
+	UpdateAbilitiesArrayInternal();
+}
+
+simulated function UpdateAbilitiesArrayInternal() {
 	local int i;
 	local int len;
 	local X2GameRuleset Ruleset;
 	local GameRulesCache_Unit UnitInfoCache;
 	local array<AvailableAction> arrCommandAbilities;
 	local int bCommanderAbility;
+	local bool DisableCategoryUI;
 
 	local AvailableAction AbilityAvailableInfo; //Represents an action that a unit can perform. Usually tied to an ability.
+	local array<AvailableAction> arrUncategorizedAbilities;
 	
 
 	//Hide any AOE indicators from old abilities
@@ -932,16 +950,29 @@ simulated function UpdateAbilitiesArray()
 		// Obtain unit's ability.
 		AbilityAvailableInfo = UnitInfoCache.AvailableActions[i];
 
-		if(ShouldShowAbilityIcon(AbilityAvailableInfo, bCommanderAbility) && IsAbilityInCurrentCategory(AbilityAvailableInfo))
+		if(ShouldShowAbilityIcon(AbilityAvailableInfo, bCommanderAbility))
 		{
-			//Separate out the command abilities to send to the CommandHUD, and do not want to show them in the regular list. 
+			// Separate out the command abilities to send to the CommandHUD, and do not want to show them in the regular list.
 			// Commented out in case we bring CommanderHUD back.
 			if( bCommanderAbility == 1 )
 			{
 				arrCommandAbilities.AddItem(AbilityAvailableInfo);
 			}
 
-			//Add to our list of abilities 
+			// Add to our list of abilities
+			arrUncategorizedAbilities.AddItem(AbilityAvailableInfo);
+		}
+	}
+
+
+	DisableCategoryUI = (arrUncategorizedAbilities.Length - class'AbilityCategoryHelpers'.static.GetNumberOfCategories()) <= `CONFIG.AbilityCategorizationThreshold;
+	// bleh
+	// my O(n) :(
+	for(i = 0; i < arrUncategorizedAbilities.Length; i++)
+	{
+		AbilityAvailableInfo = arrUncategorizedAbilities[i];
+		if(IsAbilityInCurrentCategory(AbilityAvailableInfo, DisableCategoryUI))
+		{
 			m_arrAbilities.AddItem(AbilityAvailableInfo);
 		}
 	}
@@ -997,7 +1028,6 @@ simulated function UpdateAbilitiesArray()
 		else if (m_iPreviousIndexForSecondaryMovement >= 0 && m_arrAbilities[m_iPreviousIndexForSecondaryMovement].AvailableTargets.Length > 1)
 			m_arrAbilities[m_iPreviousIndexForSecondaryMovement].AvailableTargets = SortTargets(m_arrAbilities[m_iPreviousIndexForSecondaryMovement].AvailableTargets);
 	}
-
 }
 
 simulated function DoTutorialChecks()

@@ -30,4 +30,6 @@
 */
 
 `define ACD class'AbilityCategoryManager'.default
-`define ACLOG(msg) `LOG(`msg, true, 'AbilityCategories')
+`define ACLOG(msg, showredscreen, showconsole) class'AbilityCategoryHelpers'.static.ACLog(`msg, `showredscreen, `showconsole)
+`define DLCINFO class'X2DownloadableContentInfo_AbilityCategories'.static
+`define CONFIG class'X2DownloadableContentInfo_AbilityCategories'.default

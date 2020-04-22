@@ -6,6 +6,7 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 	local AbilityCategory IteratorData;
+	local AbilityCategoryHelpers ACHelpers;
 
 	`ACLOG("Adding Category Templates!");
 
@@ -13,6 +14,10 @@ static function array<X2DataTemplate> CreateTemplates()
 		Templates.AddItem(CreateCategory(IteratorData));
 		`ACLOG("Added category: " $ IteratorData.AbilityTemplateName);
 	}
+
+	// cache our categories now
+	ACHelpers = AbilityCategoryHelpers(class'XComEngine'.static.GetClassDefaultObject(class'AbilityCategoryHelpers'));
+	ACHelpers.NumberOfCategories = Templates.Length;
 
 	return Templates;
 }
