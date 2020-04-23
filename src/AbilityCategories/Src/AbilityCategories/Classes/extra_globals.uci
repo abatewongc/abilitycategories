@@ -33,5 +33,5 @@
 `define ACLOG(msg, showredscreen, showconsole) class'AbilityCategoryHelpers'.static.ACLog(`msg, `showredscreen, `showconsole)
 `define DLCINFO class'X2DownloadableContentInfo_AbilityCategories'.static
 `define CONFIG class'X2DownloadableContentInfo_AbilityCategories'.default
-`define ALG class'AbilityCategorizationAlgorithms'.static.
+`define ALG class'AbilityCategorizationAlgorithms'.static
 `define CDO(class) `class(class'XComEngine'.static.GetClassDefaultObject(class'`class'))

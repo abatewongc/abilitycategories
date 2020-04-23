@@ -1,4 +1,5 @@
-class AbilityCategoryDataStructures extends Object config(AbilityCategories);
+// Apparently using data structures in classes alphabetically inferior to their object is not possible. Thanks Mr. Unreal
+class AAbilityCategoryDataStructures extends Object config(AbilityCategories);
 
 struct AbilityCategory {
     var name CategoryName;

@@ -13,5 +13,11 @@ LocFriendlyName="Category: Weapon"
 [AbilityCategory_Misc AbilityCategoryTemplate]
 LocFriendlyName="Category: Misc"
 
+[AbilityCategory_Item AbilityCategoryTemplate]
+LocFriendlyName="Category: Item"
+
+[AbilityCategory_Electronic AbilityCategoryTemplate]
+LocFriendlyName="Category: Electronic"
+
 [AbilityCategory_BACK AbilityCategoryTemplate]
 LocFriendlyName="Back"

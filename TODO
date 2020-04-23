@@ -3,3 +3,4 @@ Todo:
   ☐ Augment algoritm/prebaked data to filter all vanilla abilities
   ☐ Add Algorithm results caching to OPTC
   ☐ Should Show Category feature, based on if any possible abilities are present in the cache
+  ☐ Add Compatibility with WOTC Cost Based Ability Colors

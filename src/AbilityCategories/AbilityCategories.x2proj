@@ -29,7 +29,6 @@
     <Content Include="Localization\INT\AbilityCategories.int" />
     <Content Include="Src\AbilityCategories\Classes\extra_globals.uci" />
     <Content Include="Src\AbilityCategories\Classes\X2DownloadableContentInfo_AbilityCategories.uc" />
-    <Content Include="Src\AbilityCategories\Classes\AbilityCategoryDataStructures.uc" />
     <Content Include="Src\AbilityCategories\Classes\AbilityCategoryHelpers.uc" />
     <Content Include="Src\AbilityCategories\Classes\AbilityCategoryManager.uc" />
     <Content Include="Src\AbilityCategories\Classes\ACAbility_AbilityCategoryTemplateHandler.uc" />
@@ -41,6 +40,8 @@
     <Content Include="Src\AbilityCategories\Classes\ACCommandManager.uc" />
     <Content Include="Config\XComAbilityCategoryData.ini" />
     <Content Include="Content\UILibrary_PerkCategories.upk" />
+    <Content Include="Src\AbilityCategories\Classes\AAbilityCategoryDataStructures.uc" />
+    <Content Include="Src\AbilityCategories\Classes\AbilityCategorizationAlgorithms.uc" />
   </ItemGroup>
   <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
 </Project>

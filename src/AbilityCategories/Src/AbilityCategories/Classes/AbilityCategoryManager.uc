@@ -4,6 +4,7 @@ var config array<AbilityCategoryAssociation> AbilityCategoryAssociations;
 var array<AbilityCategoryAssociation> CachedAbilityCategoryAssociations;
 
 var const name AbilityCategory_Standard;
+var const name AbilityCategory_Weapon;
 var const name AbilityCategory_Psionic;
 var const name AbilityCategory_Misc;
 var const name AbilityCategory_Item;
@@ -18,6 +19,7 @@ var AbilityCategory EmptyCategory;
 defaultproperties
 {
 	AbilityCategory_Standard = "categoryStandard";
+	AbilityCategory_Weapon = "categoryWeapon";
 	AbilityCategory_Psionic = "categoryPsionic";
 	AbilityCategory_Misc = "categoryMisc";
 	AbilityCategory_Item = "categoryItem";
@@ -33,21 +35,28 @@ defaultproperties
 
 static function AbilityCategoryManager GetAbilityCategoryManager()
 {
-	return new class'AbilityCategoryManager';
+	return AbilityCategoryManager(class'XComEngine'.static.GetClassDefaultObject(class'AbilityCategoryManager'));
 }
 
 static function name GetCategoryForAbility(X2AbilityTemplate Template, XComGameState_Ability AbilityState) {
 	local int index;
 	local AbilityCategoryTemplate ACTemplate;
+	local name foundName;
+
+	//`ACLOG("Getting Category for Ability: " $ Template.DataName);
 
 	index = default.AbilityCategoryAssociations.Find('AbilityTemplateName', Template.DataName);
 	if(index != INDEX_NONE) {
-		return default.AbilityCategoryAssociations[index].CategoryName;
+		foundName = default.AbilityCategoryAssociations[index].CategoryName;
+		//`ACLOG("Found it in AbilityCategoryAssociations, was " $ foundName);
+		return foundName;
 	}
 	
 	index = default.CachedAbilityCategoryAssociations.Find('AbilityTemplateName', Template.DataName);
 	if(index != INDEX_NONE) {
-		return default.CachedAbilityCategoryAssociations[index].CategoryName;
+		foundName = default.CachedAbilityCategoryAssociations[index].CategoryName;
+		//`ACLOG("Found it in CachedAbilityCategoryAssociations, was " $ foundName);
+		return foundName;
 	}
 
 	// Fallback selection logic
@@ -59,14 +68,18 @@ static function name GetCategoryForAbility(X2AbilityTemplate Template, XComGameS
 	// do our best to find what category this is gonna go in.
 	switch(Template.AbilitySourceName) {
 		case 'eAbilitySource_Standard':
-			return default.AbilityCategory_Standard;
+		case 'eAbilitySource_Perk':
+			foundName =  default.AbilityCategory_Standard;
 		case 'eAbilitySource_Psionic':
-			return default.AbilityCategory_Psionic;
+			foundName =  default.AbilityCategory_Psionic;
 		case 'eAbilitySource_Item':
-			return default.AbilityCategory_Item;
+			foundName =  default.AbilityCategory_Item;
 		case 'eAbilitySource_Commander':
-			return default.AbilityCategory_ROOT;
+			foundName =  default.AbilityCategory_ROOT;
 		default:
-			return default.AbilityCategory_Misc;
+			foundName =  default.AbilityCategory_Misc;
 	}
+
+	//`ACLOG("Had to fallback to AbilitySourceName, final result was " $ foundName);
+	return foundName;
 }

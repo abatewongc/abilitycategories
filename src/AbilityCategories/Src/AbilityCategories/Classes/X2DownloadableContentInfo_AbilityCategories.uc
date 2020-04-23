@@ -80,13 +80,20 @@ static event OnPostTemplatesCreated()
 }
 
 private static function GenerateAndCacheCategoryData() {
-	local X2DownloadableContentInfo_AbilityCategories dlcInfo;
+	local AbilityCategoryManager AbilityCategoryManager;
 	local array<name> AbilityTemplateNames;
 	local name AbilityTemplateName;
 	local X2AbilityTemplate AbilityTemplate;
 	local array<X2AbilityTemplate> AbilityTemplates;
 	local X2AbilityTemplateManager AbilityTemplateMgr;
-	local int i;
+
+	local array<AbilityCategoryAssociation> data;
+	local AbilityCategoryAssociation iterator;
+
+	AbilityCategoryManager = class'AbilityCategoryManager'.static.GetAbilityCategoryManager();
+	if(AbilityCategoryManager.CachedAbilityCategoryAssociations.Length > 0) {
+		return;
+	}
 
 	AbilityTemplateMgr = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 	AbilityTemplateMgr.GetTemplateNames(AbilityTemplateNames);
@@ -98,14 +105,16 @@ private static function GenerateAndCacheCategoryData() {
 				continue; // this is not an ability that will be placed in the abilitycontainer
 			}
 
-			if(`ALG.IsAbilityConsumableExplosive(AbilityTemplate)) {
-				
-			}
-
-
+			`ALG.Default(data, AbilityTemplate);
 		}
 	}
 
+	if(data.Length > 0) {
+		AbilityCategoryManager.CachedAbilityCategoryAssociations = data;
+	}
+
+	`ACLOG("Finished Abiilty Categorization caching.");
+	`ACLOG("Length of CachedAbilityCategoryAssociations is: " $ AbilityCategoryManager(class'XComEngine'.static.GetClassDefaultObject(class'AbilityCategoryManager')).CachedAbilityCategoryAssociations.Length);
 }
 
 private static function AddCategoriesToUnitTemplates() {
