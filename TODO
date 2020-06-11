@@ -1,6 +1,9 @@
 
 Todo:
   ☐ Augment algoritm/prebaked data to filter all vanilla abilities
-  ☐ Add Algorithm results caching to OPTC
+  ✔ Add Algorithm results caching to OPTC @done(20-04-23 23:03)
   ☐ Should Show Category feature, based on if any possible abilities are present in the cache
   ☐ Add Compatibility with WOTC Cost Based Ability Colors
+  ☐ Back button doesn't work via hotkey when category is empty
+  ☐ Category selection doesn't work when there is an ability selected
+  ☐ Add manual overrides for base game abilities

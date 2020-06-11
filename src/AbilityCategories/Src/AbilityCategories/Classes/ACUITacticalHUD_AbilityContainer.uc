@@ -507,13 +507,13 @@ simulated public function bool ConfirmAbility( optional AvailableAction Availabl
 
 	AbilityCategory = ACUITacticalHUD_AbilityCategory(m_arrUIAbilities[m_iCurrentIndex]);
 	if(AbilityCategory != none) {
-		//`ACLOG("DirectConfirmAbility called: checking if the ability was actually a category!");
+		`ACLOG("ConfirmAbility called: checking if the ability was actually a category!");
 		if(AbilityCategory.IsCategory()) {
 			//`ACLOG("It was! Handling category selection!");
 			HandleCategorySelection();
 			return false;
 		}
-		//`ACLOG("It wasn't! Proceeding to normal ability confirmation!");
+		`ACLOG("It wasn't! Proceeding to normal ability confirmation!");
 	}
 
 	ResetMouse();
@@ -812,7 +812,7 @@ simulated function bool CanAcceptAbilityInput()
 	return true;
 }
 
-simulated function bool IsAbilityInCurrentCategory(AvailableAction AbilityAvailableInfo, bool disableCategoryUI) {
+simulated function bool IsAbilityInCurrentCategory(AvailableAction AbilityAvailableInfo, bool disableCategoryUI, array<AvailableAction> AllAvailableActions) {
 	local name AbilityCategoryName;
 	local X2AbilityTemplate AbilityTemplate;
 	local AbilityCategoryTemplate AbilityCategoryTemplate;
@@ -840,13 +840,57 @@ simulated function bool IsAbilityInCurrentCategory(AvailableAction AbilityAvaila
 			return false;
 		}
 
-		// Handle the back button
-		if(AbilityTemplate.DataName == `ACD.AbilityCategory_BACK) {
-			return CurrentAbilityCategory != `ACD.AbilityCategory_ROOT;
+		if(!thereAreAvailableAbilitiesForCategory(AbilityCategoryTemplate.CategoryData, AllAvailableActions)) {
+			return false; // don't show a category that doesn't contain abilities
 		}
 	} else if(disableCategoryUI) {
 		// if this isn't a category, and we've disabled the category UI
 		return true;
+	}
+
+	return IsAbilityInCategory(CurrentAbilityCategory, AbilityAvailableInfo, AbilityState, AbilityTemplate);
+}
+
+simulated function bool thereAreAvailableAbilitiesForCategory(AbilityCategory CategoryData, array<AvailableActionInfo> AllAvailableActions) {
+	local XComGameState_Ability AbilityState;
+	local AbilityTemplate AbilityTemplate;
+	local XComGameStateHistory History;
+	local AvailableActionInfo Iterator;
+
+	History = `XCOMHISTORY;
+
+	foreach AllAvailableActions(Iterator) {
+		AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(AbilityAvailableInfo.AbilityObjectRef.ObjectID));
+		if(AbilityState == none) {
+			continue;
+		}
+	
+		AbilityTemplate = AbilityState.GetMyTemplate();
+		if (AbilityTemplate == none){
+			continue;
+		}
+
+		if(class'AbilityCategoryManager'.static.GetCategoryForAbility(AbilityTemplate, AbilityState)) {
+			return true;
+		}
+	}
+
+
+
+
+	return false;
+}
+
+simulated function bool IsAbilityInCategory(name CategoryName, AvailableAction AbilityAvailableInfo, XComGameState_Ability AbilityState, X2AbilityTemplate AbilityTemplate) {
+	local name AbilityCategoryName;
+	local AbilityCategoryTemplate AbilityCategoryTemplate;
+
+	AbilityCategoryTemplate = AbilityCategoryTemplate(AbilityTemplate);
+	if(AbilityCategoryTemplate != none) {
+		// Handle the back button
+		if(AbilityTemplate.DataName == `ACD.AbilityCategory_BACK) {
+			return CategoryName != `ACD.AbilityCategory_ROOT;
+		}
 	}
 
 	AbilityCategoryName = class'AbilityCategoryManager'.static.GetCategoryForAbility(AbilityTemplate, AbilityState);
@@ -854,8 +898,9 @@ simulated function bool IsAbilityInCurrentCategory(AvailableAction AbilityAvaila
 		return true;
 	}
 
-	return (AbilityCategoryName == CurrentAbilityCategory);
+	return (AbilityCategoryName == CategoryName);
 }
+
 
 
 simulated static function bool ShouldShowAbilityIcon(out AvailableAction AbilityAvailableInfo, optional out int ShowOnCommanderHUD)
@@ -971,7 +1016,7 @@ simulated function UpdateAbilitiesArrayInternal() {
 	for(i = 0; i < arrUncategorizedAbilities.Length; i++)
 	{
 		AbilityAvailableInfo = arrUncategorizedAbilities[i];
-		if(IsAbilityInCurrentCategory(AbilityAvailableInfo, DisableCategoryUI))
+		if(IsAbilityInCurrentCategory(AbilityAvailableInfo, DisableCategoryUI, arrUncategorizedAbilities))
 		{
 			m_arrAbilities.AddItem(AbilityAvailableInfo);
 		}
